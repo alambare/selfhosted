@@ -1,0 +1,44 @@
+services:
+  reverse-proxy-traefik:
+    # The official v3 Traefik docker image
+    image: traefik:v3.1
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      # See https://doc.traefik.io/traefik/contributing/data-collection/
+      - --global.sendAnonymousUsage=false
+      # See https://doc.traefik.io/traefik/observability/logs/
+      - --log.level=INFO
+      # See https://doc.traefik.io/traefik/observability/access-logs/
+      - --accessLog
+      # See https://doc.traefik.io/traefik/operations/api/
+      - --api.insecure=true
+      - --api.dashboard=true
+      # See https://doc.traefik.io/traefik/routing/entrypoints/#redirection
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.traefik.address=:8080
+      # See https://doc.traefik.io/traefik/providers/docker/
+      - --providers.docker
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=proxy
+      - --providers.docker.watch=true
+      # See https://doc.traefik.io/traefik/providers/file/
+      - --providers.file.directory=/etc/traefik/dynamic_conf
+      - --providers.file.watch=true
+    ports:
+      # The HTTP port
+      - 8000:80
+      - 8443:443
+      # The Web UI (enabled by --api.insecure=true)
+      - 8080:8080
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./certs:/certs
+      - ./traefik.yml:/etc/traefik/dynamic_conf/conf.yml:ro
+    networks:
+      - proxy
+
+networks:
+  proxy: {}
