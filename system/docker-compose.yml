@@ -39,6 +39,6 @@ services:
       - ./traefik.yml:/etc/traefik/dynamic_conf/conf.yml:ro
     networks:
       - proxy
-
+    restart: always
 networks:
   proxy: {}
