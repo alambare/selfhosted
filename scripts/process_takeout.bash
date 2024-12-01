@@ -12,7 +12,7 @@ echo "Stage 1: Renaming invalid PNG files to JPG..."
 pattern="'(.*)'[[:space:]]-->[[:space:]]'(.*)'"
 
 # Run exiftool to rename image files and capture output while also displaying it on the terminal
-exiftool "$root_folder" -r '-filename<%f.$fileTypeExtension' -ext png -v | tee exiftool_log_rename.txt |
+exiftool "$root_folder" -r '-filename<%f.$fileTypeExtension' -ext png -v | tee exiftool_rename.log |
 
 # Parse the exiftool log file to extract old and new filenames
 while IFS= read -r line; do
@@ -36,8 +36,6 @@ while IFS= read -r line; do
         fi
     fi
 done
-
-echo "Stage 1 completed: Renaming of invalid PNG files finished."
 
 #################### Generate -edited metadata files ####################
 echo "Stage 2: Generating '-edited' metadata files..."
@@ -66,39 +64,21 @@ find "$root_folder" -type f -name "*-edited.*" | while read -r edited_image; do
   fi
 done
 
-echo "Stage 2 completed: '-edited' metadata files generated."
-
 #################### Rename metadata files ending with .jpg(1).json to (1).jpg.json ####################
 echo "Stage 3: Renaming metadata files ending with .jpg(1).json to (1).jpg.json..."
 
-find "$root_folder" -type f -name "*.jpg([0-9]).json" | while read -r file; do
-    # Extract the directory and base name
-    dir=$(dirname "$file")
-    base=$(basename "$file")
-    
-    # Use sed to construct the new filename
-    new_base=$(echo "$base" | sed -E 's/(.*)\.jpg\(([0-9])\)\.json/\1(\2).jpg.json/')
-    
-    # Rename the file
-    mv "$file" "$dir/$new_base"
-    echo "Renamed $file to $dir/$new_base"
-done
+exiftool -ext json -r -if '$Filename=~/(\.[^.]+)(\(\d+\)).json$$/i'  '-Filename<${Filename;s/(\.[^.]+)(\(\d+\)).json$/$2$1.json/}' "$root_folder"
 
-echo "Stage 3 completed: Renaming metadata files finished."
+
+#################### Extensions to lower case + Resolve JSON sidecar files ####################
+echo "Stage 4: Extensions to lower case + Resolve JSON sidecar files"
+
+python3 ./resolve_json.py "$root_folder"
 
 #################### Include Created Datetime if missing in videos (.mp4, .mov) ####################
-echo "Stage 4: Adding missing created datetime for videos..."
+echo "Stage 5: Adding missing elements in photos and videos"
 
-exiftool "$root_folder" -r -if '$CreateDate eq "0000:00:00 00:00:00"' -tagsfromfile %d%F.json -ext mp4 -ext mov '-Quicktime:CreateDate<JSON:PhotoTakenTimeTimestamp' -d %s
-
-echo "Stage 4 completed: Missing datetime added to videos."
-
-#################### Include Created Datetime if missing in photos ####################
-echo "Stage 5: Adding missing created datetime for photos..."
-
-exiftool "$root_folder" -r -if 'not $CreateDate' -tagsfromfile %d%F.json '-DateTimeOriginal<JSON:PhotoTakenTimeTimestamp' '-CreateDate<JSON:CreationTimeTimestamp' -d %s
-
-echo "Stage 5 completed: Missing datetime added to photos."
+exiftool -@ use_json.args "$root_folder"
 
 #################### Script Completed ####################
 echo "Script completed successfully."

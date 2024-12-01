@@ -1,0 +1,14 @@
+# Renaming metadata files ending with .jpg(1).json to (1).jpg.json
+
+# Look at JSON files
+-ext
+json 
+
+# Recursive
+-r
+
+-if 
+($Filename =~ /(\.[^.]+)(\(\d+\)).json$$/i)
+
+# Rename file
+-Filename<${Filename;s/(\.[^.]+)(\(\d+\)).json$/$2$1.json/}

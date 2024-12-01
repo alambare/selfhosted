@@ -1,16 +1,7 @@
-# Update photos and videos
+# Process Google Photo takeouts
 
-> This script requires all the photos of each album to be collocated in the same folder.
-
-This script does the following:
-
-- Rename invalid PNG to JPG
-- Generate metadata sidecar files for '-edited' assets
-- Rename metadata files ending in the like of .jpg(1).json to (1).jpg.json
-- Adding missing created datetime for photos and videos (MP4, MOV)
-
-```shell
-# update all assets from ./lambare-aubin
-
-./process.bash ../lambare-aubin
 ```
+./process_takeout.bash /mnt/d/photo-archives/lambare-aubin
+```
+
+Requires python >= 3.10, exiftool 13.04.
