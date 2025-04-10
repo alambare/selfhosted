@@ -7,7 +7,7 @@ services:
       # See https://doc.traefik.io/traefik/contributing/data-collection/
       - --global.sendAnonymousUsage=false
       # See https://doc.traefik.io/traefik/observability/logs/
-      - --log.level=INFO
+      - --log.level=DEBUG
       # See https://doc.traefik.io/traefik/observability/access-logs/
       - --accessLog
       # See https://doc.traefik.io/traefik/operations/api/
